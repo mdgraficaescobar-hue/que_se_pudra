@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Que se Pudra! - Ingreso</title>
+    <style>
+        body {
+            background-color: #0b110e;
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-box {
+            background: #121e18;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #1e3a2b;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        h1 { color: #ffd700; margin-bottom: 20px; }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #2e533a;
+            background: #192b21;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: linear-gradient(135deg, #ffd700, #bfa100);
+            color: #0b110e;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            text-transform: uppercase;
+        }
+        button:hover { background: #ffd700; }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <h1>¡QUE SE PUDRA! 🃏</h1>
+        <label>TU APODO O NOMBRE</label>
+        <input type="text" id="nombreInput" placeholder="Escribí tu apodo..." value="Jugador">
+        
+        <label>COLOR DE TU FICHA</label>
+        <select id="colorSelect">
+            <option value="azul">Azul 🔵</option>
+            <option value="roja">Rojo 🔴</option>
+            <option value="verde">Verde 🟢</option>
+            <option value="naranja">Naranja 🟠</option>
+            <option value="violeta">Violeta 🟣</option>
+        </select>
+
+        <button onclick="ingresarMesa()">Tomar Asiento en la Mesa</button>
+    </div>
+
+    <script>
+        function ingresarMesa() {
+            const nombre = document.getElementById('nombreInput').value.trim();
+            const color = document.getElementById('colorSelect').value;
+            
+            if(!nombre) return alert("Por favor ingresá un nombre");
+            
+            localStorage.setItem('poker_nombre', nombre);
+            localStorage.setItem('poker_color', color);
+            localStorage.setItem('usuarioIniciando', 'true');
+            
+            window.location.href = '/lobby';
+        }
+    </script>
+</body>
+</html>

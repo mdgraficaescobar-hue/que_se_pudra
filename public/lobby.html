@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>¡Que se Pudra! - Casino Room</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #0f1a13; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+        
+        #zona-juego { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 15px; }
+        .encabezado { text-align: center; background: rgba(9, 18, 13, 0.8); padding: 12px; border-radius: 12px; border: 1px solid #1a3a24; }
+        #ronda-titulo { color: #ffd700; font-size: 22px; }
+
+        /* PAÑO VERDE ELÍPTICO */
+        .contenedor-arena { position: relative; width: 100%; height: 480px; display: flex; justify-content: center; align-items: center; }
+        .mesa-poker { position: absolute; width: 80%; height: 65%; background: radial-gradient(circle, #1b532b 30%, #0d3118 90%); border: 12px solid #4a2f13; border-radius: 150px; box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 10px 25px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1; }
+        
+        #contenedor-mesa { display: flex; justify-content: center; align-items: center; gap: 15px; z-index: 2; position: relative; width: 100%; }
+        .mesa-vacia { color: rgba(255,255,255,0.3); font-style: italic; }
+
+        /* ASIENTOS DEL TABLERO */
+        #contenedor-jugadores { position: absolute; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
+        .panel-jugador { position: absolute; top: 50%; left: 50%; width: 120px; background: rgba(11, 23, 15, 0.95); padding: 8px; border-radius: 10px; text-align: center; border: 2px solid #2e533a; pointer-events: auto; }
+        
+        .pos-0 { transform: translate(-50%, -50%) translate(0px, 190px); }    
+        .pos-1 { transform: translate(-50%, -50%) translate(-340px, 50px); } 
+        .pos-2 { transform: translate(-50%, -50%) translate(-340px, -100px); }
+        .pos-3 { transform: translate(-50%, -50%) translate(0px, -190px); }   
+        .pos-4 { transform: translate(-50%, -50%) translate(340px, -100px); } 
+        .pos-5 { transform: translate(-50%, -50%) translate(340px, 50px); }  
+
+        .panel-jugador.jugador-activo { border-color: #ffd700; box-shadow: 0 0 15px #ffd700; background: #193521; }
+        .ficha-poker { width: 25px; height: 25px; border-radius: 50%; border: 2px dashed #fff; display: inline-block; line-height: 21px; font-weight: bold; font-size: 12px; background: #0d6efd; margin-left: 5px; }
+        .ficha-roja { background: #dc3545; } .ficha-azul { background: #0d6efd; } .ficha-verde { background: #198754; } .ficha-naranja { background: #fd7e14; } .ficha-violeta { background: #6f42c1; }
+
+        /* DISEÑO DE CARTAS TRADICIONALES DE POKER */
+        .carta-poker { width: 65px; height: 95px; background: white; border-radius: 6px; color: black; display: flex; flex-direction: column; justify-content: space-between; padding: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); font-weight: bold; position: relative; }
+        .carta-mano { cursor: pointer; transition: transform 0.2s; }
+        .carta-mano:hover { transform: translateY(-15px); }
+        .rojo { color: #dc3545; } .negro { color: #212529; }
+        .esquina-superior { font-size: 14px; line-height: 12px; }
+        .icono-central { font-size: 26px; text-align: center; }
+        .propietario-carta { position: absolute; bottom: -20px; left: 0; width: 100%; text-align: center; font-size: 11px; color: #ffd700; font-weight: bold; }
+
+        /* SECCIONES DE ACCIÓN */
+        #seccion-apuestas, .seccion-mano { background: rgba(9, 18, 13, 0.8); padding: 15px; border-radius: 12px; border: 1px solid #1a3a24; text-align: center; }
+        #contenedor-tus-cartas { display: flex; justify-content: center; gap: 10px; min-height: 100px; margin-top: 10px; }
+        
+        .btn-principal { background: linear-gradient(135deg, #ffd700, #bfa100); color: #000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
+        .btn-apuesta { background: #193521; color: #ffd700; border: 1px solid #ffd700; padding: 8px 15px; margin: 4px; font-weight: bold; border-radius: 50%; cursor: pointer; width: 35px; height: 35px; }
+        .btn-apuesta:hover { background: #ffd700; color: #000; }
+
+        /* CARTEL FLOTANTE GANADOR DE MANO */
+        .cartel-ganador { position: absolute; background: rgba(0, 0, 0, 0.95); color: #ffd700; padding: 15px 30px; border-radius: 30px; font-weight: bold; font-size: 18px; border: 2px solid #ffd700; box-shadow: 0 0 25px rgba(255, 215, 0, 0.7); z-index: 100; white-space: nowrap; text-align: center; }
+
+        @media (max-width: 768px) {
+            .contenedor-arena { height: 420px; }
+            .mesa-poker { width: 95%; height: 50%; }
+            .pos-0 { transform: translate(-50%, -50%) translate(0px, 170px); }    
+            .pos-1 { transform: translate(-50%, -50%) translate(-110px, 90px); }  
+            .pos-2 { transform: translate(-50%, -50%) translate(-110px, -90px); } 
+            .pos-3 { transform: translate(-50%, -50%) translate(0px, -170px); }   
+            .pos-4 { transform: translate(-50%, -50%) translate(120px, -90px); }  
+            .pos-5 { transform: translate(-50%, -50%) translate(120px, 90px); }   
+        }
+    </style>
+</head>
+<body>
+
+    <div id="zona-juego">
+        <div class="encabezado">
+            <h2 id="ronda-titulo">Conectando...</h2>
+            <div id="turno-alerta">Esperando sincronización...</div>
+        </div>
+
+        <div class="contenedor-arena">
+            <div class="mesa-poker">
+                <div id="contenedor-mesa"></div>
+            </div>
+            <div id="contenedor-jugadores"></div>
+        </div>
+
+        <div id="seccion-apuestas"></div>
+
+        <div class="seccion-mano">
+            <h3 style="color: #ffd700; font-size: 13px; text-transform: uppercase;">Tus cartas en mano</h3>
+            <div id="contenedor-tus-cartas"></div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let miNombre = localStorage.getItem('poker_nombre') || "Jugador";
+        let miColor = localStorage.getItem('poker_color') || "azul";
+
+        socket.on('connect', () => {
+            if (localStorage.getItem('usuarioIniciando') === 'true') {
+                localStorage.removeItem('usuarioIniciando');
+                socket.emit('unirse_mesa', { nombre: miNombre, colorFicha: miColor });
+            }
+        });
+
+        socket.on('actualizar_estado', (estado) => {
+            const titulo = document.getElementById('ronda-titulo');
+            const alerta = document.getElementById('turno-alerta');
+            
+            // Textos de estado superior
+            if (estado.fase === "LOBBY") {
+                titulo.innerText = "Sala de Espera";
+                alerta.innerText = "Alineación de mesa abierta...";
+            } else if (estado.fase === "FIN_JUEGO") {
+                titulo.innerText = "¡Fin de Partida!";
+                alerta.innerHTML = `Ganador definitivo: <strong style="color:#ffd700;">${estado.ganadorFinal}</strong>`;
+            } else if (estado.fase === "MOSTRANDO_RESULTADO") {
+                titulo.innerText = `Ronda ${estado.rondaActual} de 10`;
+                alerta.innerText = "Mano finalizada. Computando bazas...";
+            } else {
+                titulo.innerText = `Ronda ${estado.rondaActual} de 10`;
+                alerta.innerHTML = `Turno de: <strong style="color:#ffd700;">${estado.turnoDe}</strong> [${estado.fase}]`;
+            }
+
+            // Dibujar Asientos Circulares
+            const contenedorJugadores = document.getElementById('contenedor-jugadores');
+            contenedorJugadores.innerHTML = "";
+            estado.jugadores.forEach((j, idx) => {
+                const esSuTurno = (estado.turnoDe === j.nombre && estado.fase !== "LOBBY" && estado.fase !== "MOSTRANDO_RESULTADO" && estado.fase !== "FIN_JUEGO");
+                const div = document.createElement('div');
+                div.className = `panel-jugador pos-${idx} ${esSuTurno ? 'jugador-activo' : ''}`;
+                
+                let apuestaLabel = j.apuesta !== null ? j.apuesta : "-";
+                div.innerHTML = `
+                    <h4 style="font-size:12px;">${j.nombre === miNombre ? "⭐ Tú" : j.nombre.split(' ')[0]}</h4>
+                    <div style="color:#ffd700; font-size:11px; font-weight:bold;">${j.puntosTotales} pts</div>
+                    <div style="margin-top:4px; font-size:11px;">
+                        👌 ${j.manosGanadas} / <div class="ficha-poker ficha-${j.colorFicha}">${apuestaLabel}</div>
+                    </div>
+                `;
+                contenedorJugadores.appendChild(div);
+            });
+
+            // Dibujar paño y Cartel Flotante de Ganador de Mano
+            const contenedorMesa = document.getElementById('contenedor-mesa');
+            contenedorMesa.innerHTML = "";
+            
+            if (estado.mesa && estado.mesa.length > 0) {
+                estado.mesa.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = `carta-poker ${item.carta.color}`;
+                    div.innerHTML = `
+                        <div class="esquina-superior">${item.carta.numero}<br>${item.carta.palo}</div>
+                        <div class="icono-central">${item.carta.palo}</div>
+                        <div class="propietario-carta">${item.jugador === miNombre ? "Tú" : item.jugador.split(' ')[0]}</div>
+                    `;
+                    contenedorMesa.appendChild(div);
+                });
+
+                if (estado.anuncioManoGanada) {
+                    const cartel = document.createElement('div');
+                    cartel.className = 'cartel-ganador';
+                    cartel.innerText = estado.anuncioManoGanada;
+                    contenedorMesa.appendChild(cartel);
+                }
+            } else {
+                contenedorMesa.innerHTML = `<div class="mesa-vacia">${estado.fase === "JUGANDO" ? "Mesa limpia, jugá una carta..." : "Esperando apuestas..."}</div>`;
+            }
+
+            // Controles dinámicos inferiores
+            const seccionApuestas = document.getElementById('seccion-apuestas');
+            const yo = estado.jugadores.find(j => j.nombre === miNombre);
+
+            if (estado.fase === "LOBBY") {
+                seccionApuestas.innerHTML = `<button class="btn-principal" onclick="socket.emit('iniciar_partida')">Iniciar Partida con Bots</button>`;
+            } else if (estado.fase === "APOSTANDO") {
+                if (estado.turnoDe === miNombre && yo && yo.apuesta === null) {
+                    let html = `<p style="margin-bottom:6px;">¿Cuántas manos estimás ganar en esta ronda de ${estado.cartasEnEstaRonda} carta(s)?</p>`;
+                    for (let i = 0; i <= estado.cartasEnEstaRonda; i++) {
+                        html += `<button class="btn-apuesta" onclick="socket.emit('enviar_apuesta', ${i})">${i}</button>`;
+                    }
+                    seccionApuestas.innerHTML = html;
+                } else {
+                    seccionApuestas.innerHTML = `<p style="color:#aaa;">Esperando estimaciones del resto...</p>`;
+                }
+            } else if (estado.fase === "JUGANDO") {
+                seccionApuestas.innerHTML = estado.turnoDe === miNombre ? 
+                    `<p style="color:#ffd700; font-weight:bold;">¡Tu turno! Elegí un naipe de abajo.</p>` : 
+                    `<p style="color:#aaa;">Jugando... Turno de ${estado.turnoDe}</p>`;
+            } else {
+                seccionApuestas.innerHTML = `<p style="color:#aaa;">Preparando juego...</p>`;
+            }
+
+            // Dibujar mis cartas en mano abajo
+            const contenedorTusCartas = document.getElementById('contenedor-tus-cartas');
+            contenedorTusCartas.innerHTML = "";
+            if (yo && yo.cartas && yo.cartas.length > 0) {
+                yo.cartas.forEach(carta => {
+                    const div = document.createElement('div');
+                    div.className = `carta-poker carta-mano ${carta.color}`;
+                    div.innerHTML = `
+                        <div class="esquina-superior">${carta.numero}<br>${carta.palo}</div>
+                        <div class="icono-central">${carta.palo}</div>
+                    `;
+                    div.onclick = () => {
+                        if (estado.fase === "JUGANDO" && estado.turnoDe === miNombre) {
+                            socket.emit('enviar_carta', carta);
+                        }
+                    };
+                    contenedorTusCartas.appendChild(div);
+                });
+            } else {
+                contenedorTusCartas.innerHTML = `<div style="color:rgba(255,255,255,0.2); font-style:italic; margin-top:30px;">Sin naipes.</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

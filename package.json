@@ -1,0 +1,13 @@
+{
+  "name": "que-se-pudra",
+  "version": "1.0.0",
+  "description": "Juego de cartas Que se Pudra con WebSockets y Bots",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
