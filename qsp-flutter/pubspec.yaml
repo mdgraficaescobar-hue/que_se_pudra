@@ -1,0 +1,22 @@
+name: qsp_poker_club
+description: Qué Se Pudra — Juego de cartas estratégico multijugador
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  socket_io_client: ^2.0.3+1
+  shared_preferences: ^2.2.2
+  uuid: ^4.3.3
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

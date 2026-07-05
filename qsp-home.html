@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qué Se Pudra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold:     #F5C518;
+    --gold-dk:  #C8960A;
+    --neon-mag: #FF2EBF;
+    --neon-teal:#00FFD1;
+    --felt:     #0D3B2E;
+    --felt-dk:  #081F18;
+    --felt-md:  #114535;
+    --text:     #FFFFFF;
+    --btn-bg:   #E8A800;
+    --btn-sh:   #8B5E00;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--felt-dk);
+    font-family: 'Nunito', sans-serif;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ── FELT TEXTURE (SVG inline, 0 http requests) ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' fill='rgba(255,255,255,0.015)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── RADIAL SPOTLIGHT ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(30,90,60,0.55) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .screen {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px 0;
+  }
+
+  .topbar-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255,255,255,0.75);
+    font-family: 'Nunito', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    transition: color .2s;
+  }
+  .topbar-btn:hover { color: var(--gold); }
+
+  .topbar-btn svg {
+    width: 26px; height: 26px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ── SUITS ROW ── */
+  .suits {
+    display: flex;
+    gap: 14px;
+    font-size: 22px;
+    margin-top: 6px;
+    filter: drop-shadow(0 0 8px rgba(255,46,191,0.6));
+  }
+  .suits span:nth-child(1),.suits span:nth-child(3) { color: #111; -webkit-text-stroke: 1px rgba(255,255,255,.5); }
+  .suits span:nth-child(2),.suits span:nth-child(4) { color: #e63030; }
+
+  /* ── LOGO ── */
+  .logo-wrap {
+    margin-top: 4px;
+    text-align: center;
+    position: relative;
+  }
+
+  .logo-main {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(52px, 16vw, 88px);
+    line-height: .9;
+    color: var(--gold);
+    text-shadow:
+      0 0 20px rgba(245,197,24,.5),
+      0 4px 0 var(--gold-dk),
+      0 6px 0 #7a5500,
+      2px 8px 12px rgba(0,0,0,.8);
+    letter-spacing: -1px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo-sub {
+    display: inline-block;
+    background: linear-gradient(135deg, #1a2e80 0%, #2a44b0 50%, #1a2e80 100%);
+    border: 2px solid rgba(255,255,255,.25);
+    border-radius: 6px;
+    padding: 4px 20px;
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(12px, 3.5vw, 16px);
+    letter-spacing: .2em;
+    color: #fff;
+    margin-top: 2px;
+    text-shadow: 0 1px 4px rgba(0,0,0,.7);
+  }
+
+  /* ── NEON SIGN ── */
+  .neon-sign {
+    position: absolute;
+    top: 10px;
+    right: -10px;
+    background: rgba(0,0,0,.6);
+    border: 2px solid var(--neon-mag);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: 'Russo One', sans-serif;
+    font-size: 11px;
+    color: var(--neon-mag);
+    text-shadow: 0 0 8px var(--neon-mag), 0 0 16px var(--neon-mag);
+    box-shadow: 0 0 12px rgba(255,46,191,.4), inset 0 0 8px rgba(255,46,191,.1);
+    line-height: 1.2;
+    text-align: center;
+    animation: neon-flicker 4s infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes neon-flicker {
+    0%,95%,100% { opacity: 1; }
+    96% { opacity: .6; }
+    97% { opacity: 1; }
+    98% { opacity: .4; }
+  }
+
+  /* ── HERO ILLUSTRATION (CSS-only, no images) ── */
+  .hero {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    height: 210px;
+    margin-top: 6px;
+  }
+
+  /* TABLE FELT */
+  .hero-table {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 340px;
+    height: 90px;
+    background: radial-gradient(ellipse at 50% 30%, #1a6644, var(--felt-dk));
+    border: 3px solid #8B6914;
+    border-radius: 50%;
+    box-shadow: 0 8px 32px rgba(0,0,0,.7), inset 0 0 30px rgba(0,0,0,.4);
+  }
+
+  /* CARDS (fanned) */
+  .cards {
+    position: absolute;
+    bottom: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    height: 80px;
+  }
+
+  .card {
+    position: absolute;
+    width: 46px;
+    height: 64px;
+    background: #fff;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    box-shadow: 2px 2px 6px rgba(0,0,0,.5);
+    bottom: 0;
+    display: flex;
+    align-items: flex-start;
+    padding: 3px 4px;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .card::after {
+    content: attr(data-suit);
+    position: absolute;
+    bottom: 3px;
+    right: 4px;
+    font-size: 13px;
+    transform: rotate(180deg);
+  }
+
+  .card.red { color: #c0392b; }
+  .card.blk { color: #111; }
+
+  .card:nth-child(1) { left: 0px;   transform: rotate(-20deg); transform-origin: bottom center; }
+  .card:nth-child(2) { left: 26px;  transform: rotate(-10deg); transform-origin: bottom center; }
+  .card:nth-child(3) { left: 52px;  transform: rotate(0deg);   transform-origin: bottom center; z-index:2; }
+  .card:nth-child(4) { left: 78px;  transform: rotate(10deg);  transform-origin: bottom center; }
+  .card:nth-child(5) { left: 104px; transform: rotate(20deg);  transform-origin: bottom center; }
+
+  /* CHIPS */
+  .chips {
+    position: absolute;
+    bottom: 56px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+
+  .chip {
+    width: 34px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.3);
+    box-shadow: 0 2px 4px rgba(0,0,0,.5);
+  }
+
+  .chip.green { background: radial-gradient(ellipse, #3a8c4a, #1f5028); }
+  .chip.red   { background: radial-gradient(ellipse, #c0392b, #7b1818); }
+  .chip.blue  { background: radial-gradient(ellipse, #2980b9, #174e70); }
+
+  /* BOT CHARACTER */
+  .bot {
+    position: absolute;
+    bottom: 76px;
+    left: 12px;
+    font-size: 44px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,.6));
+    animation: bot-float 3s ease-in-out infinite;
+  }
+
+  @keyframes bot-float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
+  }
+
+  /* PEOPLE */
+  .person-l {
+    position: absolute;
+    bottom: 76px;
+    right: 14px;
+    font-size: 38px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,.6));
+  }
+
+  /* ── ENTER BUTTON ── */
+  .btn-enter {
+    margin-top: 10px;
+    width: min(320px, 82vw);
+    padding: 18px 0;
+    background: linear-gradient(180deg, #FFCE00 0%, var(--btn-bg) 55%, #c47d00 100%);
+    border: none;
+    border-radius: 50px;
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(18px, 5vw, 24px);
+    color: #3d1f00;
+    letter-spacing: .12em;
+    cursor: pointer;
+    box-shadow:
+      0 6px 0 var(--btn-sh),
+      0 10px 24px rgba(0,0,0,.5);
+    transition: transform .1s, box-shadow .1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-enter:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 var(--btn-sh), 0 4px 12px rgba(0,0,0,.4);
+  }
+
+  /* ── FEATURE PILLS ── */
+  .features {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px 8px;
+    padding: 16px 16px 24px;
+    max-width: 480px;
+    width: 100%;
+  }
+
+  .feat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 12px;
+    padding: 10px 14px;
+    min-width: 80px;
+    flex: 1 1 80px;
+    max-width: 110px;
+  }
+
+  .feat-icon { font-size: 22px; line-height: 1; }
+
+  .feat-label {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: rgba(255,255,255,.7);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .feat-val {
+    font-family: 'Russo One', sans-serif;
+    font-size: 13px;
+    color: var(--gold);
+  }
+
+  /* ── POKER ROOM NEON (left) ── */
+  .neon-left {
+    position: fixed;
+    left: 12px;
+    top: 38%;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    background: rgba(0,0,0,.5);
+    border: 2px solid var(--neon-teal);
+    border-radius: 8px;
+    padding: 10px 6px;
+    font-family: 'Russo One', sans-serif;
+    font-size: 10px;
+    letter-spacing: .15em;
+    color: var(--neon-teal);
+    text-shadow: 0 0 8px var(--neon-teal), 0 0 16px var(--neon-teal);
+    box-shadow: 0 0 10px rgba(0,255,209,.3);
+    display: none; /* hidden on narrow screens */
+  }
+
+  @media (min-width: 560px) { .neon-left { display: block; } }
+
+</style>
+</head>
+<body>
+
+<div class="screen">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <button class="topbar-btn" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      AJUSTES
+    </button>
+
+    <div class="suits">
+      <span>♠</span><span>♥</span><span>♣</span><span>♦</span>
+    </div>
+
+    <button class="topbar-btn" aria-label="Perfil">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      PERFIL
+    </button>
+  </div>
+
+  <!-- LOGO -->
+  <div class="logo-wrap">
+    <div class="logo-main">QUÉ SE<br>PUDRA</div>
+    <div class="logo-sub">POKER CLUB</div>
+    <div class="neon-sign">QUÉ SE<br>PUDRA!</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero" aria-hidden="true">
+    <div class="hero-table"></div>
+
+    <!-- Cards fanned -->
+    <div class="cards">
+      <div class="card blk" data-suit="♠">A<br>♠</div>
+      <div class="card red" data-suit="♥">K<br>♥</div>
+      <div class="card blk" data-suit="♣">Q<br>♣</div>
+      <div class="card red" data-suit="♦">J<br>♦</div>
+      <div class="card red" data-suit="♥">10<br>♥</div>
+    </div>
+
+    <!-- Chips stack -->
+    <div class="chips">
+      <div class="chip green"></div>
+      <div class="chip red"></div>
+      <div class="chip blue"></div>
+      <div class="chip green"></div>
+      <div class="chip red"></div>
+    </div>
+
+    <!-- Characters (emoji, 0 bytes) -->
+    <div class="bot">🤖</div>
+    <div class="person-l">🧑‍🦱</div>
+  </div>
+
+  <!-- CTA -->
+  <button class="btn-enter">INGRESAR</button>
+
+  <!-- FEATURE PILLS -->
+  <div class="features">
+    <div class="feat">
+      <div class="feat-icon">👥</div>
+      <div class="feat-val">4–6</div>
+      <div class="feat-label">Jugadores</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🃏</div>
+      <div class="feat-val">10</div>
+      <div class="feat-label">Rondas</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🎯</div>
+      <div class="feat-val">Visibles</div>
+      <div class="feat-label">Apuestas</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🤖</div>
+      <div class="feat-val">Smart</div>
+      <div class="feat-label">Bots</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🏆</div>
+      <div class="feat-val">Al Más Hábil</div>
+      <div class="feat-label">Gana</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- NEON LEFT (desktop) -->
+<div class="neon-left">POKER ROOM</div>
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "qsp-engine",
+  "version": "1.0.0",
+  "description": "Motor de juego para Qué Se Pudra",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3",
+    "@types/jest": "^29.5.11"
+  }
+}
