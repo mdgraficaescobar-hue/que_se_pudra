@@ -868,8 +868,9 @@ function renderGame(snap) {
   // ── CARTAS JUGADAS EN LA MANO ACTUAL ──────────
   const trickEl = document.getElementById('trick-plays');
   const plays = snap.currentTrick?.plays || [];
-  if (plays.length > 0) {
-    // Mostrar las cartas jugadas en la mano actual
+  if (trickEl.dataset.locked) {
+    // Hay cartas de la mano anterior mostrándose — no pisar
+  } else if (plays.length > 0) {
     trickEl.innerHTML = plays.map(play => {
       const player = snap.players.find(p => p.id === play.playerId);
       return `<div class="trick-play">
@@ -877,9 +878,7 @@ function renderGame(snap) {
         <div class="trick-play-name">${player?.name || ''}</div>
       </div>`;
     }).join('');
-    trickEl.dataset.hasTrick = 'true';
-  } else if (!trickEl.dataset.hasTrick) {
-    // Solo limpiar si no hay una mano en display
+  } else {
     trickEl.innerHTML = '<div class="table-hint">Esperando<br>jugadas...</div>';
   }
 
@@ -976,25 +975,28 @@ function sendMsg(id) {
 }
 
 function onTrickEnd(result) {
-  // Mostrar todas las cartas jugadas en la mesa con el ganador resaltado
+  lastTrickResult = result;
+  showToast('✋ ' + result.winnerName + ' gana la mano', 2500);
+
+  // Mostrar las 4 cartas con ganador resaltado y bloquear el render del snapshot
   const trickEl = document.getElementById('trick-plays');
-  trickEl.innerHTML = result.plays.map(play => {
-    const snap = currentSnapshot;
-    const player = snap ? snap.players.find(p => p.id === play.playerId) : null;
-    const isWinner = play.playerId === result.winnerId;
-    return `<div class="trick-play" style="${isWinner ? 'transform:scale(1.15);filter:drop-shadow(0 0 8px gold)' : 'opacity:0.7'}">
-      ${renderCard(play.card, 'md')}
-      <div class="trick-play-name" style="${isWinner ? 'color:var(--gold);font-weight:800' : ''}">${player?.name || ''}</div>
-    </div>`;
-  }).join('');
+  if (trickEl) {
+    trickEl.dataset.locked = '1';
+    trickEl.innerHTML = result.plays.map(function(play) {
+      const player = currentSnapshot ? currentSnapshot.players.find(function(p) { return p.id === play.playerId; }) : null;
+      const isWinner = play.playerId === result.winnerId;
+      return '<div class="trick-play" style="' + (isWinner ? 'transform:scale(1.15);filter:drop-shadow(0 0 10px gold)' : 'opacity:0.65') + '">'
+        + renderCard(play.card, 'md')
+        + '<div class="trick-play-name" style="' + (isWinner ? 'color:var(--gold);font-weight:800' : '') + '">'
+        + (player ? player.name : '') + '</div></div>';
+    }).join('');
 
-  // Toast con ganador
-  showToast(`✋ ${result.winnerName} gana la mano`, 2000);
-
-  // Limpiar la mesa después de 2 segundos (el snapshot nuevo llega y pisa)
-  setTimeout(() => {
-    if (trickEl) trickEl.innerHTML = '<div class="table-hint">Esperando<br>jugadas...</div>';
-  }, 5000);
+    // Desbloquear después de 3 segundos
+    setTimeout(function() {
+      delete trickEl.dataset.locked;
+      trickEl.innerHTML = '<div class="table-hint">Esperando<br>jugadas...</div>';
+    }, 3000);
+  }
 }
 
 function onRoundEnd(result) {
@@ -1108,29 +1110,22 @@ function goHome() {
 }
 
 function confirmLeave() {
-  const m = document.getElementById('leave-modal'); m.style.display = 'flex';
+  document.getElementById('leave-modal').style.display = 'flex';
 }
 
 function closeLeave() {
-  const m2 = document.getElementById('leave-modal'); if(m2) m2.style.display = 'none';
+  document.getElementById('leave-modal').style.display = 'none';
 }
 
-async function doLeave() {
-  closeLeave();
-  try {
-    // room:leave no usa payload — emitir directo sin esperar ack
-    if (socket && socket.connected) {
-      socket.emit('room:leave', (res) => {
-        console.log('leave response:', res);
-      });
-      // Dar tiempo al servidor para procesar
-      await new Promise(r => setTimeout(r, 500));
-    }
-  } catch(e) {
-    console.log('leave error:', e);
+function doLeave() {
+  document.getElementById('leave-modal').style.display = 'none';
+  if (socket && socket.connected) {
+    socket.emit('room:leave', function() {});
   }
-  if (socket) { socket.disconnect(); socket = null; }
-  showScreen('screen-home');
+  setTimeout(function() {
+    if (socket) { socket.disconnect(); socket = null; }
+    showScreen('screen-home');
+  }, 400);
 }
 
 // ── PROFILE ───────────────────────────────────
